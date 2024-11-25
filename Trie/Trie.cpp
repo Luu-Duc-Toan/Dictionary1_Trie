@@ -5,11 +5,10 @@
 #include <fstream>
 #include <unordered_map>
 using namespace std;
-//Add meaning of word by selenium or OTHER TOOLS
 //UI
 struct Trie {
     bool endOfWord;
-    string meaning;
+    vector<string> meanings;
     unordered_map<char, Trie*> map;
     Trie() {
         endOfWord = false;
@@ -23,26 +22,28 @@ struct Trie {
             cur = cur->map[x];
         }
         if (cur->endOfWord) {
-            cout << "Tu nay da co nghia" << endl;
+            for (string& dicMeaning : meanings) {
+				if (dicMeaning == meaning) return;
+            }
+			cur->meanings.push_back(meaning);
             return;
         }
         cur->endOfWord = true;
-        cur->meaning = meaning;
+        cur->meanings.push_back(meaning);
     }
 
-    bool search(string &s) {
+    vector<string> search(string &s) {
         Trie* cur = this;
         for (char& x : s) {
             if (cur->map.find(x) != cur->map.end())
                 cur = cur->map[x];
             else {
                 cout << "Khong co tu nay" << endl;
-                return false;
+                return {};
             }
         }
-        if(cur->endOfWord) cout << cur->meaning << endl;
+		if (cur->endOfWord) return cur->meanings;
 		else cout << "Khong phai 1 tu hoan chinh" << endl;
-        return cur->endOfWord;
     }
     void Delete(string &s) {
         Trie* cur = this;
@@ -67,7 +68,7 @@ struct Trie {
 			cur = par;
         }
         //Test
-        if (search(s)) cout << "Tu nay van con trong tu dien" << endl;
+        if (search(s).size() == 0) cout << "Tu nay van con trong tu dien" << endl;
         else cout << "Tu nay da bi xoa" << endl;
     }
     bool startsWith(string &s) {
@@ -86,27 +87,22 @@ int main() {
     fstream output;
     output.open("output.txt", ios::out);
     Trie* root = new Trie();
-    int n;
     string word, meaning;
-    char q;
-    input >> n;
-    int i = 0;
-    for (i; i < n; i++) {
-        input >> q;
-        cout << q << endl;
-        if (q == 'i') {
-            input >> word >> meaning;
-            root->insert(word, meaning);
+    string line;
+
+    while (!input.eof()) {
+		getline(input, line);
+        int start = 0;
+		int end = line.find_first_of(' ', start);
+		word = line.substr(start, end - start);
+        while (end != -1) {
+            start = end + 1;
+            end = line.find(' ', start);
+			meaning = line.substr(start, end - start);
+			root->insert(word, meaning);
         }
-        else if (q == 's') {
-            input >> word;
-            root->search(word);
-        }
-        else {
-            input >> word;
-            root->Delete(word);
-        }
-	}
+    }
+    
     input.close();
     output.close();
 }
